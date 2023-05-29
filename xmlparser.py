@@ -1,7 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
 from pprint import pprint as pp
-import json
 import sys
 
 BASE_URL = 'https://raw.githubusercontent.com/JoshuaAPhillips/digital-anon/main/transcriptions/'
@@ -15,7 +14,7 @@ class xmlParser:
     """
     gets name of XML file to open and appends to BASE_URL
     """
-    global idno
+    global filename, idno
     idno = sys.argv[-1]
     filename = BASE_URL + idno
     return filename
@@ -39,21 +38,15 @@ class xmlParser:
     """
 
     r = self.getFile()
+    global soup
     soup = BeautifulSoup(r.text, 'xml')
     return soup
-  
-  def allDivs(self):
-    soup = self.makeSoup()
-    all_divs = soup.find_all('div')
-    return all_divs
+"""  
+
 
   def facsDict(self):
 
-    """
-    returns a dictionary of facs attributes arranged by div
-    """
-
-    all_divs = self.allDivs()
+    all_divs = self.allDivs(
 
     facs_dict = {}
     for div in all_divs:
@@ -68,11 +61,11 @@ class xmlParser:
         facs_dict[parent_facs] = child_facs_list
     return facs_dict
 
-  """def childDict(self):
+  def childDict(self):
       
-      
+
       returns a dictionary of child attributes arranged by div --- doesn't work...
-      
+
       all_divs = self.allDivs()
 
       n = [div.get("n") for div in all_divs]
@@ -86,21 +79,21 @@ class xmlParser:
 
       child_dict = dict(zip(n, child_sublist))
       return child_dict
-"""
+
   def toJson(self):
      
-     """
+
      saves dicts to Json
-     """
+
      facs_dict = self.facsDict()
      child_dict = self.childDict()
 
      with open ('./annodata/{}-facs.json'.format(idno.strip('.xml')), 'w') as json_file:
         json.dump(facs_dict, json_file, indent=4)
 
-     """
      with open ('./annodata/{}-children.json'.format(idno.strip('.xml')), 'w') as json_file:
         json.dump(child_dict, json_file, indent=4)
      """
+
 test = xmlParser()
-test.toJson()
+test.makeSoup()
