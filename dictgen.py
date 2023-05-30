@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup
 from pprint import pprint as pp
+import json
 import xmlparser
 from xmlparser import *
 
@@ -15,12 +16,27 @@ class DictGen:
     div_list = soup.find_all('div')
     return div_list
   
-  def facs_dict(self):
+  def getN(self):
     div_list = self.simmer()
+
+    n_list = []
+    for div in div_list:
+       n = div.get('n')
+       n_list.append(n)
+
+    return n_list
+    #pp(n_list)
+  
+  def facsDict(self):
+    div_list = self.simmer()
+    n_list = self.getN()
+
     facs_dict = {}
 
-    for div in div_list:
-        parent_facs = div.get('n')
+    for idx, div in enumerate(div_list):
+        
+        n_item = n_list[idx]
+        
         children = div.find_all(attrs={'facs': True})
         
         child_facs_list = []
@@ -28,19 +44,53 @@ class DictGen:
         for child in children:
             child_facs_list.append(child.get('facs'))
         
-        facs_dict[parent_facs] = child_facs_list
-    #pp(facs_dict)
+        facs_dict[n_item] = child_facs_list
+    
     return facs_dict
 
-  def child_dict(self):
-     div_list = self.simmer()
+  def childDict(self):
+    div_list = self.simmer()
+    n_list = self.getN()
 
-     for div in div_list:
-        pass
+    child_dict = {}
+
+    for idx, div in enumerate(div_list):
+      n_item = n_list[idx]
+
+      p_children = div.find_all('p')
+      p_children_list = []
+      for child in p_children:
+        if child.text != '\n':
+          p_children_list.append(child)
+        else:
+          pass
+
+      child_dict[n_item] = p_children_list
+
+    return child_dict
+
+  def combinedDict(self):
+    facs_dict = self.facsDict()
+    child_dict = self.childDict()
+    n_list = self.getN()
+
+    combined_dict = {}
+
+    for key, value in facs_dict.items():
+      combined_dict = {key: value for key, value in zip(facs_dict.items())}
+
+    return combined_dict
+    
+      
 
   def test(self):
-    div_list = self.simmer()
-    #pp(div_list)
+    facs_dict = self.facsDict()
+    child_dict = self.childDict()
+    combined_dict = self.combinedDict()
+    
+    #with open('test.txt', 'w') as out:
+      #pp(combined_dict, stream=out)
+
 
 test = DictGen()
-test.facs_list()
+test.combinedDict()
