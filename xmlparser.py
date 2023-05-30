@@ -39,7 +39,7 @@ class xmlParser:
 
     r = self.getFile()
     global soup
-    soup = BeautifulSoup(r.text, 'lxml')
+    soup = BeautifulSoup(r.text, features="xml")
     return soup
 
 test = xmlParser()

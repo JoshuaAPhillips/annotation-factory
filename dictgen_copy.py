@@ -1,4 +1,4 @@
-from bs4 import BeautifulSoup
+#from bs4 import BeautifulSoup
 from pprint import pprint as pp
 import re
 import json
@@ -38,20 +38,18 @@ class DictGen:
             """
             sanitises child_paras
             """
-            child_para = re.sub('\\n', '', child_para_raw)
-            child_para = re.sub('\s+\s+', '', child_para_raw)
-            #child_para = re.sub('\\\\', '', child_para_raw)
+            child_para_a = re.sub(r'\n', '', child_para_raw)
+            child_para_b = re.sub('(\s\s)+', '', child_para_a)
+            child_para_c = re.sub(r'\\', '', child_para_b)
 
-
-        
             # Add the facs attribute and child_para to the div dictionary
-            div_dict[facs] = child_para
+            div_dict[facs] = child_para_c
         
         # Add the div dictionary to the main TEI dictionary
         tei_dict[div_id] = div_dict
 
     # Print the resulting TEI dictionary
-    pp(tei_dict)
+    #pp(tei_dict)
 
     return tei_dict
     
@@ -59,9 +57,10 @@ class DictGen:
 
   def test(self):
     tei_dict = self.combinedDict()
-    
-    with open ('{}-test.json'.format(idno.rstrip('.xml')), 'w') as json_data:
-       json.dump(tei_dict, json_data, indent=4)
 
+    """
+    with open ('{}-test.json'.format(idno.rstrip('.xml')), 'w') as file:
+       json.dump(tei_dict, file, indent=4, ensure_ascii=False)
+"""
 test = DictGen()
-test.test()
+test.combinedDict()
