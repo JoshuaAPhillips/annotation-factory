@@ -12,15 +12,17 @@ class DictGen:
     idno = xmlparser.idno
     soup = xmlparser.soup
 
-  def simmer(self):
-    global div_list
-    div_list = soup.find_all('div')
-    return div_list
   
   """
-  Try functions to get lists of facs attribs, children, etc. and then call in generator function at end
+  Try functions to get lists of facs attribs, children, etc. and then call in generator function at end. and SCRAP BEAUTIFULSOUP which is naught but an UGLY BROTH and refactor all this to use xml.etree
   """
-  
+
+  def facsList(self):
+    pass
+
+  def childList(self):
+    pass
+    
   def manifestGen(self):
     div_list = self.simmer()
     manifest_list = []
@@ -55,4 +57,4 @@ class DictGen:
     pp(manifest_list)
 """
 test = DictGen()
-test.manifestGen()
+test.facsList()
