@@ -5,6 +5,8 @@ from pprint import pprint as pp
 
 BASE_URL = 'https://raw.githubusercontent.com/JoshuaAPhillips/digital-anon/main/transcriptions/'
 
+ET.register_namespace('', 'http://www.tei-c.org/ns/1.0')
+
 
 def getFilename():
   
@@ -98,8 +100,7 @@ def childList():
     inner_list = []
 
     for p in div.findall('.//{http://www.tei-c.org/ns/1.0}p[@facs]'):
-      children = p.findall('.//{http://www.tei-c.org/ns/1.0}*')
-      for i in children:
+      for i in p.findall('.//{http://www.tei-c.org/ns/1.0}*'):
         inner_list.append(i)
     child_list.append(inner_list)
 

@@ -71,7 +71,7 @@ class xmlParser:
   def childList(self):
     div_list = self.divList()
 
-    child_list = []
+    child_list_raw = []
 
     for div in div_list:
       inner_list = []
@@ -81,10 +81,10 @@ class xmlParser:
         for i in children:
           children_strings = ET.tostring(i, encoding="unicode")
           inner_list.append(children_strings)
-      child_list.append(inner_list)
+      child_list_raw.append(inner_list)
 
     with open ('out.txt', 'w') as file:
-      file.write(str(child_list))
+      file.write(str(child_list_raw))
 
 
 test = xmlParser()
