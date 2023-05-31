@@ -8,6 +8,9 @@ div_list = xml_listgen.divList()
 facs_list = xml_listgen.facsList()
 child_list_raw = xml_listgen.childList()
 
+pp(ET.itertext(child_list_raw))
+
+"""
 def convert_pointers_to_strings(pointers):
     if isinstance(pointers, list):
         return [convert_pointers_to_strings(item) for item in pointers]
@@ -17,7 +20,5 @@ def convert_pointers_to_strings(pointers):
         return pointers
     
 strings = convert_pointers_to_strings(child_list_raw)
-pp(facs_list)
+pp(facs_list)"""
 
-with open('out.txt', 'w') as file:
-    file.write(str(strings))

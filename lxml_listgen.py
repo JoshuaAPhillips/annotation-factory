@@ -1,7 +1,6 @@
 from lxml import etree as ET
 import sys
 import requests
-from pprint import pprint as pp
 import io
 
 BASE_URL = 'https://raw.githubusercontent.com/JoshuaAPhillips/digital-anon/main/transcriptions/'
@@ -100,8 +99,6 @@ def childList():
   -- intended for use as TextualBody for IIIF annotation
   """
   root = getRoot()
-  div_list = divList()
-  facs_list = facsList()
 
   child_list = []
   elements = root.findall('.//tei:p[@facs]', namespaces=namespaces)
@@ -112,18 +109,21 @@ def childList():
     for descendant in descendants:
         tag = descendant.tag
         text = descendant.text
-
-        content = f"<{tag}>{text}</{tag}>"
-
+        if text is not None:
+            content = f"<{tag}>{text}</{tag}>"
+        else:
+            content = f"<{tag}></{tag}>"
         inner_list.append(content)
     child_list.append(inner_list)
-  pp(child_list)
-        
+  print(child_list[0])
+  return child_list
 
 getIdno()
 divList()
 facsList()
 childList()
+
+
 
 
 
