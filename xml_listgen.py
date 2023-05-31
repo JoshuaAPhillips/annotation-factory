@@ -5,110 +5,111 @@ from pprint import pprint as pp
 
 BASE_URL = 'https://raw.githubusercontent.com/JoshuaAPhillips/digital-anon/main/transcriptions/'
 
-class xmlListGen:
 
-  def __init__(self) -> None:
-    return
-
-  def getFilename(self):
-    
-    """
-    gets name of XML file to open and appends to BASE_URL
-    """
-
-    global filename, idno
-    idno = sys.argv[-1]
-    filename = BASE_URL + idno
-    return filename
-
-  def getFile(self):
-
-    """
-    requests XML from address specified in {filename}
-    """
-
-    filename = self.getFilename()
-
-    r = requests.get(filename)
-    return r
+def getFilename():
   
-  def getRoot(self):
-    response = self.getFile()
-    content = response.content
-    root = ET.fromstring(content)
-    return root
+  """
+  gets name of XML file to open and appends to BASE_URL
+  """
+
+  global filename, id
+  id = sys.argv[-1]
+  filename = BASE_URL + id
+  return filename
+
+def getFile():
+
+  """
+  requests XML from address specified in {filename}
+  """
+
+  filename = getFilename()
+
+  r = requests.get(filename)
+  return r
+
+def getRoot():
+  response = getFile()
+  content = response.content
+  root = ET.fromstring(content)
+  return root
+
+def getIdno():
+
+  """
+  returns idno element from TEI to use as identifier
+  """
   
-  def getIdno(self):
+  root = getRoot()
+  idno = root.find('.//{http://www.tei-c.org/ns/1.0}msIdentifier/{http://www.tei-c.org/ns/1.0}idno').text
+  return idno
 
-    """
-    returns idno element from TEI to use as identifier
-    """
-    
-    root = self.getRoot()
-    idno = root.find('.//{http://www.tei-c.org/ns/1.0}msIdentifier/{http://www.tei-c.org/ns/1.0}idno').text
-    return idno
+def divList():
+
+  """
+  returns master list of <div>s for later use
+  """
+
+  root = getRoot()
+
+  div_list = []
+  divs = root.findall('.//{http://www.tei-c.org/ns/1.0}div')
+  for div in divs:
+    div_list.append(div)
+  return div_list
+
+def facsList():
+
+  """
+  returns nested list of <p> elements with @facs attributes
+  -- these are arranged by parent <div>
+  -- intended for use as target for IIIF annotation
+  """
+
+  root = getRoot()
+  div_list = divList()
+  facs_list = []
+
+  for div in div_list:
+
+    inner_list = []
+    for child in div:
+      facs = root.find('.//{http://www.tei-c.org/ns/1.0}div/{http://www.tei-c.org/ns/1.0}p[@facs]')
+      inner_list.append(facs.attrib["facs"])
+    facs_list.append(inner_list)
   
-  def divList(self):
+  #pp(facs_list)
 
-    """
-    returns master list of <div>s for later use
-    """
+  return facs_list
 
-    root = self.getRoot()
-
-    div_list = []
-    divs = root.findall('.//{http://www.tei-c.org/ns/1.0}div')
-    for div in divs:
-      div_list.append(div)
-    return div_list
+def childList():
   
-  def facsList(self):
+  """
+  returns nested list of children for each <p> element with @facs attribute
+  -- arranged first by <div> then by <p>
+  -- intended for use as TextualBody for IIIF annotation
+  """
 
-    """
-    returns nested list of <p> elements with @facs attributes
-    -- these are arranged by parent <div>
-    -- intended for use as target for IIIF annotation
-    """
+  div_list = divList()
 
-    root = self.getRoot()
-    div_list = self.divList()
-    facs_list = []
+  child_list = []
 
-    for div in div_list:
+  for div in div_list:
+    inner_list = []
 
-      inner_list = []
-      for child in div:
-        facs = root.find('.//{http://www.tei-c.org/ns/1.0}div/{http://www.tei-c.org/ns/1.0}p[@facs]')
-        inner_list.append(facs.attrib["facs"])
-      facs_list.append(inner_list)
-    
-    #pp(facs_list)
+    for p in div.findall('.//{http://www.tei-c.org/ns/1.0}p[@facs]'):
+      children = p.findall('.//{http://www.tei-c.org/ns/1.0}*')
+      for i in children:
+        inner_list.append(i)
+    child_list.append(inner_list)
 
-    return facs_list
-  
-  def childList(self):
-    
-    """
-    returns nested list of children for each <p> element with @facs attribute
-    -- arranged first by <div> then by <p>
-    -- intended for use as TextualBody for IIIF annotation
-    """
+  return child_list
 
-    div_list = self.divList()
+def doEverything():
+  getFilename()
+  getFile()
+  getRoot()
+  facsList()
+  childList()
 
-    child_list = []
-
-    for div in div_list:
-      inner_list = []
-
-      for p in div.findall('.//{http://www.tei-c.org/ns/1.0}p[@facs]'):
-        children = p.findall('.//{http://www.tei-c.org/ns/1.0}*')
-        for i in children:
-          inner_list.append(i)
-      child_list.append(inner_list)
-
-    return child_list
-
-test = xmlListGen()
-test.childList()
-test.facsList()
+doEverything()
