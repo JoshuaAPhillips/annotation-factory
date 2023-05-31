@@ -1,7 +1,9 @@
 import requests
-from bs4 import BeautifulSoup
-from pprint import pprint as pp
+import xml.etree.ElementTree as ET
+import logging
 import sys
+from pprint import pprint as pp
+
 
 BASE_URL = 'https://raw.githubusercontent.com/JoshuaAPhillips/digital-anon/main/transcriptions/'
 
@@ -27,20 +29,49 @@ class xmlParser:
 
     filename = self.getFilename()
 
-    print(f"Loading file from URL: {filename}")
+    logging.info(f"Loading file from URL: {filename}")
     r = requests.get(filename)
     return r
+  
+  def getRoot(self):
+    response = self.getFile()
+    content = response.content
+    root = ET.fromstring(content)
 
-  def makeSoup(self):
+    #print(root)
 
-    """
-    returns text of requested file as a BeautifulSoup object
-    """
+    return root
+  
+  def getIdno(self):
+    root = self.getRoot()
+    idno = root.find('.//{http://www.tei-c.org/ns/1.0}msIdentifier/{http://www.tei-c.org/ns/1.0}idno').text
+    return idno
+  
+  def divList(self):
+    root = self.getRoot()
 
-    r = self.getFile()
-    global soup
-    soup = BeautifulSoup(r.text, features="xml")
-    return soup
+    div_list = []
+    divs = root.findall('.//{http://www.tei-c.org/ns/1.0}div')
+    for div in divs:
+      div_list.append(div)
+    return div_list
+  
+  def facsList(self):
+    root = self.getRoot()
+    div_list = self.divList()
+    facs_list = []
+
+    for div in div_list:
+      inner_list = []
+      for child in div:
+        facs = root.find('.//{http://www.tei-c.org/ns/1.0}div/{http://www.tei-c.org/ns/1.0}p[@facs]').attrib
+        inner_list.append(facs)
+      facs_list.append(inner_list)
+    return facs_list
+  
+  def childList(self):
+    facs_list = self.facsList()
+
 
 test = xmlParser()
-test.makeSoup()
+test.childList()
