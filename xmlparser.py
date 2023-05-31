@@ -1,8 +1,8 @@
 import requests
 import xml.etree.ElementTree as ET
-import logging
 import sys
 from pprint import pprint as pp
+import re
 
 
 BASE_URL = 'https://raw.githubusercontent.com/JoshuaAPhillips/digital-anon/main/transcriptions/'
@@ -29,7 +29,6 @@ class xmlParser:
 
     filename = self.getFilename()
 
-    logging.info(f"Loading file from URL: {filename}")
     r = requests.get(filename)
     return r
   
@@ -64,13 +63,28 @@ class xmlParser:
     for div in div_list:
       inner_list = []
       for child in div:
-        facs = root.find('.//{http://www.tei-c.org/ns/1.0}div/{http://www.tei-c.org/ns/1.0}p[@facs]').attrib
-        inner_list.append(facs)
+        facs = root.find('.//{http://www.tei-c.org/ns/1.0}div/{http://www.tei-c.org/ns/1.0}p[@facs]')
+        inner_list.append(facs.attrib["facs"])
       facs_list.append(inner_list)
     return facs_list
   
   def childList(self):
-    facs_list = self.facsList()
+    div_list = self.divList()
+
+    child_list = []
+
+    for div in div_list:
+      inner_list = []
+
+      for p in div.findall('.//{http://www.tei-c.org/ns/1.0}p[@facs]'):
+        children = p.findall('.//{http://www.tei-c.org/ns/1.0}*')
+        for i in children:
+          children_strings = ET.tostring(i, encoding="unicode")
+          inner_list.append(children_strings)
+      child_list.append(inner_list)
+
+    with open ('out.txt', 'w') as file:
+      file.write(str(child_list))
 
 
 test = xmlParser()
