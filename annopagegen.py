@@ -74,36 +74,41 @@ def dictMaker():
 
     for idx, div in enumerate(div_list):
 
+        facs_list_raw = root.findall('.//{http://www.tei-c.org/ns/1.0}div/{http://www.tei-c.org/ns/1.0}p[@facs]')
         facs_list = []
-        facs = root.find('.//{http://www.tei-c.org/ns/1.0}div/{http://www.tei-c.org/ns/1.0}p[@facs]').attrib.values()
-        facs_list.append(facs)
+        for facs in facs_list_raw:
+           facs_value = facs.attrib.values()
+        facs_list.append(facs_value)
+
+        items_list = []
 
         annotation_page = {
         "@context": "http://iiif.io/api/presentation/3/context.json",
         "id": f"https://raw.githubusercontent.com/JoshuaAPhillips/digital-anon/main/manifests/{idno}-{idx + 1}-annotations.json",
         "type": "Manifest",
-        "items": items[idx]
-
-                            }
+        "items": items_list
+    }
+        
         for idx_2, child in enumerate(facs_list):
-            items = []
 
             annotation_individual = {
             "id": f"https://raw.githubusercontent.com/JoshuaAPhillips/digital-anon/main/manifests/{idno}-annotation-{idx_2 + 1}.json",
             "type": "Annotation",
             "motivation": "Commenting",
-            "target": facs_list[idx_2],
+            "target": str(facs_list[idx_2]).strip('[').strip(']'),
             "body": {
                 "type": "TextualBody",
                 "language": "en",
                 "format": "text/html",
                 "body": "foo bar baz"
-
+                
             }
-        }        
-        items.append(annotation_individual)
-        annotation_page["items"].append([i for i in items])
-        
+        }
+            items_list.append(annotation_individual)
+        annotation_page["items"].append(annotation_individual)
+
         pp(annotation_page)
+        
+        #pp(facs_list)
 
 dictMaker()
