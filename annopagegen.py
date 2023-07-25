@@ -7,13 +7,6 @@ import tempfile
 
 BASE_URL = 'https://raw.githubusercontent.com/JoshuaAPhillips/digital-anon/main/transcriptions/'
 
-"""
-idno = xml_listgen.getIdno()
-div_list = xml_listgen.divList()
-facs_list = xml_listgen.facsList()
-child_list = xml_listgen.childList()
-"""
-
 def getFilename():
   
   """
@@ -50,7 +43,6 @@ def getIdno():
   
   root = getRoot()
   idno = root.find('.//{http://www.tei-c.org/ns/1.0}msIdentifier/{http://www.tei-c.org/ns/1.0}idno').text
-  print(idno)
   return idno
 
 def divList():
@@ -71,19 +63,24 @@ def divList():
 def tempFileGen():
 
   """
-  saves each <div> in a temp file for iterating over
+  saves each <div> in a temp file for iterating over in further functions
   """
   div_list = divList()
-  idno = getIdno
+  idno = getIdno()
   temp_files = []
 
   for div in div_list:
     with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_file:
       temp_file.write(etree.tostring(div, encoding="unicode"))
-      os.system("open %s" % temp_file.name)
-  temp_files.append(temp_file)
-      
-tempFileGen()
+      #os.system("open %s" % temp_file.name)
+    temp_files.append(temp_file)
+  
+  return temp_files
+
+if __name__ == "__main__":
+  temp_files = tempFileGen()
+
+
 
 """
 def dictMaker():
