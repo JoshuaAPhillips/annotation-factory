@@ -1,7 +1,9 @@
 import sys
-from lxml import etree as ET, objectify
+import os
+from lxml import etree
 from pprint import pprint as pp
 import requests
+import tempfile
 
 BASE_URL = 'https://raw.githubusercontent.com/JoshuaAPhillips/digital-anon/main/transcriptions/'
 
@@ -26,7 +28,7 @@ def getFilename():
 def getFile():
 
   """
-  requests XML fromg address specified in {filename}
+  requests XML from address specified in {filename}
   """
 
   filename = getFilename()
@@ -37,7 +39,7 @@ def getFile():
 def getRoot():
   response = getFile()
   content = response.content
-  root = ET.fromstring(content)
+  root = etree.fromstring(content)
   return root
 
 def getIdno():
@@ -66,7 +68,24 @@ def divList():
 
   return div_list
 
+def tempFileGen():
 
+  """
+  saves each <div> in a temp file for iterating over
+  """
+  div_list = divList()
+  idno = getIdno
+  temp_files = []
+
+  for div in div_list:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_file:
+      temp_file.write(etree.tostring(div, encoding="unicode"))
+      os.system("open %s" % temp_file.name)
+  temp_files.append(temp_file)
+      
+tempFileGen()
+
+"""
 def dictMaker():
     root = getRoot()
     idno = getIdno()
@@ -112,3 +131,4 @@ def dictMaker():
         #pp(facs_list)
 
 dictMaker()
+"""
