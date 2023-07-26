@@ -1,7 +1,7 @@
 import sys
 import os
 from lxml import etree
-from pprint import pprint as pp
+#from pprint import pprint as pp
 import requests
 import tempfile
 
@@ -16,42 +16,40 @@ def getFilename():
   global filename, id
   id = sys.argv[-1]
   filename = BASE_URL + id
+  print(filename)
   return filename
 
-def getFile():
+def getFile(filename):
 
   """
   requests XML from address specified in {filename}
   """
 
-  filename = getFilename()
+  file = requests.get(filename)
+  return file
 
-  r = requests.get(filename)
-  return r
-
-def getRoot():
-  response = getFile()
+def getRoot(file):
+  response = getFile(filename)
   content = response.content
   root = etree.fromstring(content)
+  print(root)
   return root
 
-def getIdno():
+def getIdno(root):
 
   """
   returns idno element from TEI to use as identifier
   """
-  
-  root = getRoot()
+
   idno = root.find('.//{http://www.tei-c.org/ns/1.0}msIdentifier/{http://www.tei-c.org/ns/1.0}idno').text
+  print(idno)
   return idno
 
-def divList():
+def divList(root):
 
   """
   returns master list of <div>s for later use
   """
-
-  root = getRoot()
 
   div_list = []
   divs = root.findall('.//{http://www.tei-c.org/ns/1.0}div')
@@ -60,25 +58,43 @@ def divList():
 
   return div_list
 
-def tempFileGen():
+
+def fileGen(div_list, idno):
 
   """
-  saves each <div> in a temp file for iterating over in further functions
+  creates 'temp' directory and saves out each <div> in a file for iterating over in further functions
   """
-  div_list = divList()
-  idno = getIdno()
-  temp_files = []
+  if not os.path.isdir('./temp'):
+    os.mkdir('./temp')
+  else:
+    pass
 
-  for div in div_list:
-    with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_file:
-      temp_file.write(etree.tostring(div, encoding="unicode"))
-      #os.system("open %s" % temp_file.name)
-    temp_files.append(temp_file)
+  for idx, div in enumerate(div_list):
+    filename = f"./temp/{idno}-{idx + 1}.xml"
+    with open(filename, "w") as f:
+      f.write(etree.tostring(div, encoding="unicode"))
+
+def divDictGen(temp_files):
+  pass
+
+
+def main():
+
+  """
+  Does the Thing
+  """
+  filename = getFilename()
+  file = getFile(filename)
+  root = getRoot(file)
+  idno = getIdno(root)
+  div_list = divList(root)
+  fileGen(div_list, idno)
+
+
   
-  return temp_files
 
 if __name__ == "__main__":
-  temp_files = tempFileGen()
+  main()
 
 
 
