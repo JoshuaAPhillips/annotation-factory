@@ -1,9 +1,8 @@
 import sys
 import os
-from lxml import etree
-#from pprint import pprint as pp
 import requests
-import tempfile
+from lxml import etree
+import json
 
 BASE_URL = 'https://raw.githubusercontent.com/JoshuaAPhillips/digital-anon/main/transcriptions/'
 
@@ -16,7 +15,7 @@ def getFilename():
   global filename, id
   id = sys.argv[-1]
   filename = BASE_URL + id
-  print(filename)
+
   return filename
 
 def getFile(filename):
@@ -32,7 +31,7 @@ def getRoot(file):
   response = getFile(filename)
   content = response.content
   root = etree.fromstring(content)
-  print(root)
+
   return root
 
 def getIdno(root):
@@ -58,15 +57,14 @@ def divList(root):
 
   return div_list
 
-
 def fileGen(div_list, idno):
 
   """
   creates 'temp' directory and saves out each <div> in a file for iterating over in further functions
   """
-  if not os.path.isdir('./temp'):
-    os.mkdir('./temp')
-  else:
+  try:
+    os.mkdir(f'./temp')
+  except FileExistsError:
     pass
 
   for idx, div in enumerate(div_list):
@@ -74,9 +72,34 @@ def fileGen(div_list, idno):
     with open(filename, "w") as f:
       f.write(etree.tostring(div, encoding="unicode"))
 
-def divDictGen(temp_files):
-  pass
+def divDictGen(temp_files, idno):
+  """
+  iterates over files in 'temp', creating a dictionary for each one
+  """
+  temp_file_dir = './temp'
 
+
+  for filename in os.listdir(temp_file_dir):
+
+    f = os.path.join(temp_file_dir, filename)
+    if os.path.isfile(f) and f.endswith('.xml'):
+
+      with open(f, "r") as file:
+        div_dict = {}
+        
+        div = file.read()
+
+        root = etree.fromstring(div)
+
+        for p in root.findall('{http://www.tei-c.org/ns/1.0}p'):
+          facs = p.get('facs')
+          children = p.xpath('./*')
+          div_dict[facs] = [etree.tostring(i) for i in children]
+
+        with open(f"{f}.json", "w") as dictfile:
+          json.dump(str(div_dict), dictfile)
+
+        
 
 def main():
 
@@ -88,7 +111,8 @@ def main():
   root = getRoot(file)
   idno = getIdno(root)
   div_list = divList(root)
-  fileGen(div_list, idno)
+  temp_files = fileGen(div_list, idno)
+  divDictGen(temp_files, idno)
 
 
   
