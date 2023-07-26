@@ -4,6 +4,8 @@ import requests
 from lxml import etree
 from pprint import pp
 import json
+import natsort
+import shutil
 
 BASE_URL = 'https://raw.githubusercontent.com/JoshuaAPhillips/digital-anon/main/transcriptions/'
 
@@ -116,13 +118,16 @@ def manifestMaker(idno, temp_file_dir):
   """
 
   try:
-    os.mkdir(f'./manifests')
+    os.mkdir(f'./{idno}-manifests')
   except FileExistsError:
     pass
 
-  counter = 1
+  file_list = natsort.natsorted(os.listdir(temp_file_dir))
+  #pp(file_list)
 
-  for counter, filename in enumerate(os.listdir(temp_file_dir)):
+  manifest_list = []
+
+  for counter, filename in enumerate(file_list):
 
     f = os.path.join(temp_file_dir, filename)
     with open(f, 'r') as jsonfile:
@@ -154,16 +159,33 @@ def manifestMaker(idno, temp_file_dir):
         }
         inner_counter += 1
         items_list.append(annotation_individual)
+      
 
-      with open(f"./manifests/{idno}-{counter +1}-annotations.json", "w") as jsonfile:
-        json.dump(annotation_page, jsonfile, indent=4)
-        
+      manifest_list.append(annotation_page)
+
+  #pp(manifest_list)
+
+  return manifest_list
+
+def jsonSave(idno, manifest_list):
+
+  for file_counter, annotation_page in enumerate(manifest_list):
+    with open(f"./{idno}-manifests/{idno}-{file_counter +1}-annotations.json", "w") as jsonfile:
+      json.dump(annotation_page, jsonfile, indent=4)
+
+def cleanupFinal():
+  path = './temp'
+  try:
+    shutil.rmtree(path)
+  except OSError as e:
+    print("Error: %s - %s." % (e.filename, e.strerror))
 
 def main():
 
   """
   does the Thing
   """
+
   filename = getFilename()
   file = getFile(filename)
   root = getRoot(file)
@@ -172,7 +194,9 @@ def main():
   temp_file_dir = fileGen(div_list, idno)
   divDictGen(temp_file_dir)
   xmlCleaner(temp_file_dir)
-  manifestMaker(idno, temp_file_dir)
+  manifest_list = manifestMaker(idno, temp_file_dir)
+  jsonSave(idno, manifest_list)
+  cleanupFinal()
 
 if __name__ == "__main__":
   main()
