@@ -2,6 +2,7 @@ import sys
 import os
 import requests
 from lxml import etree
+from pprint import pp
 import json
 
 BASE_URL = 'https://raw.githubusercontent.com/JoshuaAPhillips/digital-anon/main/transcriptions/'
@@ -41,7 +42,6 @@ def getIdno(root):
   """
 
   idno = root.find('.//{http://www.tei-c.org/ns/1.0}msIdentifier/{http://www.tei-c.org/ns/1.0}idno').text
-  print(idno)
   return idno
 
 def divList(root):
@@ -71,13 +71,14 @@ def fileGen(div_list, idno):
     filename = f"./temp/{idno}-{idx + 1}.xml"
     with open(filename, "w") as f:
       f.write(etree.tostring(div, encoding="unicode"))
-
-def divDictGen(temp_files, idno):
-  """
-  iterates over files in 'temp', creating a dictionary for each one
-  """
+      
   temp_file_dir = './temp'
+  return temp_file_dir
 
+def divDictGen(temp_file_dir):
+  """
+  iterates over files in 'temp', creating a dictionary for each one and saves out into .json
+  """
 
   for filename in os.listdir(temp_file_dir):
 
@@ -94,78 +95,87 @@ def divDictGen(temp_files, idno):
         for p in root.findall('{http://www.tei-c.org/ns/1.0}p'):
           facs = p.get('facs')
           children = p.xpath('./*')
-          div_dict[facs] = [etree.tostring(i) for i in children]
+          div_dict[facs] = [etree.tostring(i).decode('utf-8') for i in children]
 
         with open(f"{f}.json", "w") as dictfile:
-          json.dump(str(div_dict), dictfile)
+          json.dump(div_dict, dictfile, indent=4)
 
+def cleaner(temp_file_dir):
+
+  """
+  tidies up by deleting unnecessary .xml files
+  """
+  for filename in os.listdir(temp_file_dir):
+    f = os.path.join(temp_file_dir, filename)
+    if os.path.isfile(f) and f.endswith('.xml'):
+      os.remove(f)
+
+def manifestMaker(idno, temp_file_dir):
+  """
+  creates annotationPage manifests and saves to .json file
+  """
+
+  try:
+    os.mkdir(f'./manifests')
+  except FileExistsError:
+    pass
+
+  counter = 1
+
+  for counter, filename in enumerate(os.listdir(temp_file_dir)):
+
+    f = os.path.join(temp_file_dir, filename)
+    with open(f, 'r') as jsonfile:
+      data = json.load(jsonfile)
+
+      keys = data.keys()
+      values = data.values()
+
+      items_list = []
+      annotation_page = {
+        "@context": "http://iiif.io/api/presentation/3/context.json",
+        "id": f"https://raw.githubusercontent.com/JoshuaAPhillips/digital-anon/main/manifests/{idno}-{counter + 1}-annotations.json",
+        "type": "Manifest",
+        "items": items_list
+    }
+      inner_counter = 1
+      for key, value in zip(keys, values):
+        annotation_individual = {
+          "id": f"https://raw.githubusercontent.com/JoshuaAPhillips/digital-anon/main/manifests/{idno}-annotation_{inner_counter}.json",
+          "type": "Annotation",
+          "motivation": "Commenting",
+          "target": [key],
+          "body": {
+            "type": "TextualBody",
+            "language": "en",
+            "format": "text/html",
+            "body": [value]
+          }
+        }
+        inner_counter += 1
+        items_list.append(annotation_individual)
+
+      with open(f"./manifests/{idno}-{counter + 1}-annotations.json", "w") as jsonfile:
+        json.dump(annotation_page, jsonfile, indent=4)
         
 
 def main():
 
   """
-  Does the Thing
+  does the Thing
   """
   filename = getFilename()
   file = getFile(filename)
   root = getRoot(file)
   idno = getIdno(root)
   div_list = divList(root)
-  temp_files = fileGen(div_list, idno)
-  divDictGen(temp_files, idno)
-
-
-  
+  temp_file_dir = fileGen(div_list, idno)
+  divDictGen(temp_file_dir)
+  cleaner(temp_file_dir)
+  manifestMaker(idno, temp_file_dir)
 
 if __name__ == "__main__":
   main()
 
 
 
-"""
-def dictMaker():
-    root = getRoot()
-    idno = getIdno()
-    div_list = divList()
-
-    for idx, div in enumerate(div_list):
-
-        facs_list_raw = root.findall('.//{http://www.tei-c.org/ns/1.0}div/{http://www.tei-c.org/ns/1.0}p[@facs]')
-        facs_list = []
-        for facs in facs_list_raw:
-           facs_value = facs.attrib.values()
-        facs_list.append(facs_value)
-
-        items_list = []
-
-        annotation_page = {
-        "@context": "http://iiif.io/api/presentation/3/context.json",
-        "id": f"https://raw.githubusercontent.com/JoshuaAPhillips/digital-anon/main/manifests/{idno}-{idx + 1}-annotations.json",
-        "type": "Manifest",
-        "items": items_list
-    }
-        
-        for idx_2, child in enumerate(facs_list):
-
-            annotation_individual = {
-            "id": f"https://raw.githubusercontent.com/JoshuaAPhillips/digital-anon/main/manifests/{idno}-annotation-{idx_2 + 1}.json",
-            "type": "Annotation",
-            "motivation": "Commenting",
-            "target": str(facs_list[idx_2]).strip('[').strip(']'),
-            "body": {
-                "type": "TextualBody",
-                "language": "en",
-                "format": "text/html",
-                "body": "foo bar baz"
-                
-            }
-        }
-            items_list.append(annotation_individual)
-        annotation_page["items"].append(annotation_individual)
-
-        pp(annotation_page)
-        
-        #pp(facs_list)
-
-dictMaker()
-"""
