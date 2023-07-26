@@ -100,7 +100,7 @@ def divDictGen(temp_file_dir):
         with open(f"{f}.json", "w") as dictfile:
           json.dump(div_dict, dictfile, indent=4)
 
-def cleaner(temp_file_dir):
+def xmlCleaner(temp_file_dir):
 
   """
   tidies up by deleting unnecessary .xml files
@@ -155,7 +155,7 @@ def manifestMaker(idno, temp_file_dir):
         inner_counter += 1
         items_list.append(annotation_individual)
 
-      with open(f"./manifests/{idno}-{counter + 1}-annotations.json", "w") as jsonfile:
+      with open(f"./manifests/{idno}-{counter +1}-annotations.json", "w") as jsonfile:
         json.dump(annotation_page, jsonfile, indent=4)
         
 
@@ -171,7 +171,7 @@ def main():
   div_list = divList(root)
   temp_file_dir = fileGen(div_list, idno)
   divDictGen(temp_file_dir)
-  cleaner(temp_file_dir)
+  xmlCleaner(temp_file_dir)
   manifestMaker(idno, temp_file_dir)
 
 if __name__ == "__main__":
