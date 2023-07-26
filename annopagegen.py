@@ -149,12 +149,12 @@ def manifestMaker(idno, temp_file_dir):
           "id": f"https://raw.githubusercontent.com/JoshuaAPhillips/digital-anon/main/manifests/{idno}-annotation_{inner_counter}.json",
           "type": "Annotation",
           "motivation": "Commenting",
-          "target": [key],
+          "target": [key.strip('/full/0/default.tif')],
           "body": {
             "type": "TextualBody",
             "language": "en",
             "format": "text/html",
-            "body": [value]
+            "value": [value]
           }
         }
         inner_counter += 1
