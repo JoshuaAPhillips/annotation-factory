@@ -178,7 +178,7 @@ def cleanupFinal():
   try:
     shutil.rmtree(path)
   except OSError as e:
-    print("Error: %s - %s." % (e.filename, e.strerror))
+    print(f"Error: {e.filename} - {e.strerror}.")
 
 def main():
 
