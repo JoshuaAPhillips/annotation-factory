@@ -6,6 +6,7 @@ from pprint import pp
 import json
 import natsort
 import shutil
+import re
 
 BASE_URL = 'https://raw.githubusercontent.com/JoshuaAPhillips/digital-anon/main/transcriptions/'
 
@@ -117,6 +118,8 @@ def manifestMaker(idno, temp_file_dir):
   creates annotationPage manifests and saves to .json file
   """
 
+  regex = r'/(\d+,\d+,\d+,\d+)'
+
   try:
     os.mkdir(f'./{idno}-manifests')
   except FileExistsError:
@@ -139,22 +142,26 @@ def manifestMaker(idno, temp_file_dir):
       items_list = []
       annotation_page = {
         "@context": "http://iiif.io/api/presentation/3/context.json",
-        "id": f"https://raw.githubusercontent.com/JoshuaAPhillips/digital-anon/main/manifests/{idno}-{counter + 1}-annotations.json",
-        "type": "Manifest",
+        "id": f"https://raw.githubusercontent.com/JoshuaAPhillips/digital-anon/main/manifests/annotations/{idno}-annotations/{idno}-{counter + 1}-annotations.json",
+        "type": "AnnotationPage",
         "items": items_list
     }
       inner_counter = 1
       for key, value in zip(keys, values):
+
+        keySanitiser = lambda key: re.sub(r'(/iiif/2/[^/]+/[^/]+)/([^/]+/full/0/default.tif)$', r'\1#xywh=\2', key).strip('/full/0/default.tif')
+
+
         annotation_individual = {
-          "id": f"https://raw.githubusercontent.com/JoshuaAPhillips/digital-anon/main/manifests/{idno}-annotation_{inner_counter}.json",
+          "id": f"https://raw.githubusercontent.com/JoshuaAPhillips/digital-anon/main/manifests/{idno}-annotation#{inner_counter}.json",
           "type": "Annotation",
-          "motivation": "Commenting",
-          "target": [key.strip('/full/0/default.tif')],
+          "motivation": "commenting",
+          "target": keySanitiser(key),
           "body": {
             "type": "TextualBody",
             "language": "en",
             "format": "text/html",
-            "value": [value]
+            "value": value
           }
         }
         inner_counter += 1
