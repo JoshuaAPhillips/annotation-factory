@@ -1,6 +1,7 @@
 import sys
 import os
 import requests
+import logging
 from lxml import etree
 from pprint import pp
 import json
@@ -9,6 +10,8 @@ import shutil
 import re
 
 BASE_URL = 'https://raw.githubusercontent.com/JoshuaAPhillips/digital-anon/main/transcriptions/'
+
+logging.basicConfig(level=logging.INFO)
 
 def getFilename():
   
@@ -29,6 +32,7 @@ def getFile(filename):
   """
 
   file = requests.get(filename)
+  logging.info(f'Downloading {id} from {filename}...')
   return file
 
 def getRoot(file):
@@ -69,6 +73,8 @@ def fileGen(div_list, idno):
     os.mkdir(f'./temp')
   except FileExistsError:
     pass
+
+  logging.info('Generating temporary files...')
 
   for idx, div in enumerate(div_list):
     filename = f"./temp/{idno}-{idx + 1}.xml"
@@ -170,7 +176,7 @@ def manifestMaker(idno, temp_file_dir):
 
       manifest_list.append(annotation_page)
 
-  #pp(manifest_list)
+  logging.info(f'Generating IIIF AnnotationPage manifests for {filename}...')
 
   return manifest_list
 
@@ -178,14 +184,18 @@ def jsonSave(idno, manifest_list):
 
   for file_counter, annotation_page in enumerate(manifest_list):
     with open(f"./{idno}-manifests/{idno}-{file_counter +1}-annotations.json", "w") as jsonfile:
+      
       json.dump(annotation_page, jsonfile, indent=4)
+  logging.info(f'Saving {idno} manifests to JSON...')
 
 def cleanupFinal():
   path = './temp'
   try:
     shutil.rmtree(path)
   except OSError as e:
-    print(f"Error: {e.filename} - {e.strerror}.")
+    logging.error(f"Error: {e.filename} - {e.strerror}.")
+
+  logging.info('Cleaning up temporary files...')
 
 def main():
 
@@ -204,6 +214,7 @@ def main():
   manifest_list = manifestMaker(idno, temp_file_dir)
   jsonSave(idno, manifest_list)
   cleanupFinal()
+  print(f'AnnotationPage manifests for {filename} successfully generated')
 
 if __name__ == "__main__":
   main()
